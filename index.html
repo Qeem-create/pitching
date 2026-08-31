@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPitch - ระดมทุนสร้างโปรเจค (Real-time)</title>
+    
+    <!-- Google Fonts: Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1E3A8A', 
+                        secondary: '#DB2777', 
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #f8fafc; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .gradient-text {
+            background: linear-gradient(to right, #1E3A8A, #DB2777);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1E3A8A, #DB2777);
+        }
+        /* Loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1E3A8A;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="font-sans text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="logout()">
+                    <i class="fa-solid fa-rocket text-2xl"></i>
+                    <span class="font-bold text-xl tracking-wide">EduPitch</span>
+                    <!-- แสดงสถานะ Firebase -->
+                    <span id="db-status" class="ml-2 text-xs bg-black/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <div class="w-2 h-2 rounded-full bg-yellow-400" id="db-status-dot"></div>
+                        <span id="db-status-text">Connecting...</span>
+                    </span>
+                </div>
+                <div id="nav-user-info" class="hidden flex items-center gap-4">
+                    <div id="nav-balance-container" class="hidden bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+                        <i class="fa-solid fa-wallet mr-1"></i> ยอดคงเหลือ: <span id="nav-balance" class="font-bold text-yellow-300"></span> บาท
+                    </div>
+                    <span id="current-user-name" class="font-medium text-sm md:text-base hidden md:block"></span>
+                    <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition text-sm">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- ==================== VIEW 1: LOGIN ==================== -->
+        <div id="view-login" class="flex flex-col items-center justify-center min-h-[70vh]">
+            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-4 border-primary">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold gradient-text mb-2">เข้าสู่ระบบ</h2>
+                    <p class="text-gray-500 text-sm">ระบบระดมทุน Real-time</p>
+                </div>
+
+                <div class="flex border-b mb-6">
+                    <button id="tab-student" onclick="switchLoginTab('student')" class="flex-1 py-2 font-medium text-primary border-b-2 border-primary transition">นักเรียน</button>
+                    <button id="tab-admin" onclick="switchLoginTab('admin')" class="flex-1 py-2 font-medium text-gray-400 border-b-2 border-transparent transition hover:text-gray-600">ผู้ดูแลระบบ</button>
+                </div>
+
+                <div id="form-student">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">เลขประจำตัวนักเรียน</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-id-card absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="login-student-id" placeholder="กรอกเลขประจำตัวนักเรียน" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition">
+                        </div>
+                    </div>
+                    <button onclick="loginStudent()" class="w-full gradient-bg text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition shadow-md">
+                        เข้าสู่ระบบนักลงทุน
+                    </button>
+                </div>
+
+                <div id="form-admin" class="hidden">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">รหัส PIN ผู้ดูแลระบบ</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
+                            <input type="password" id="login-admin-pin" placeholder="กรอก PIN 6 หลัก" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition">
+                        </div>
+                    </div>
+                    <button onclick="loginAdmin()" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition shadow-md">
+                        จัดการระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW 2: ADMIN DASHBOARD ==================== -->
+        <div id="view-admin" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b pb-4 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-user-shield text-secondary mr-2"></i>ระบบจัดการ (Admin)</h2>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="switchAdminTab('students')" id="btn-tab-students" class="px-4 py-2 bg-primary text-white rounded-lg shadow transition text-sm">จัดการนักเรียน</button>
+                    <button onclick="switchAdminTab('projects')" id="btn-tab-projects" class="px-4 py-2 bg-white text-gray-600 border rounded-lg hover:bg-gray-50 transition text-sm">จัดการโปรเจค</button>
+                    <button onclick="switchAdminTab('leaderboard')" id="btn-tab-leaderboard" class="px-4 py-2 bg-white text-gray-600 border rounded-lg hover:bg-gray-50 transition text-sm"><i class="fa-solid fa-chart-simple text-secondary mr-1"></i>สรุประดมทุน</button>
+                </div>
+            </div>
+
+            <!-- Admin Tab: Students -->
+            <div id="admin-tab-students">
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border-t-4 border-primary">
+                    <h3 class="font-bold text-lg mb-4 text-primary"><i class="fa-solid fa-user-plus mr-2"></i>เพิ่มข้อมูลนักเรียน & ยอดเงิน</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">เลขประจำตัว</label>
+                            <input type="text" id="add-stu-id" class="w-full p-2 border rounded focus:border-primary focus:outline-none">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">ชื่อ - นามสกุล</label>
+                            <input type="text" id="add-stu-name" class="w-full p-2 border rounded focus:border-primary focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">ห้องเรียน</label>
+                            <input type="text" id="add-stu-room" class="w-full p-2 border rounded focus:border-primary focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">เงินเริ่มต้น (บาท)</label>
+                            <input type="number" id="add-stu-balance" class="w-full p-2 border rounded focus:border-primary focus:outline-none" value="1000">
+                        </div>
+                    </div>
+                    <div class="mt-4 text-right">
+                        <button onclick="addStudent()" class="bg-primary text-white px-6 py-2 rounded hover:bg-blue-800 transition shadow"><i class="fa-solid fa-plus mr-1"></i> เพิ่มนักเรียน</button>
+                    </div>
+                    
+                    <div class="mt-6 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-between">
+                        <div>
+                            <span class="text-sm font-medium text-gray-700"><i class="fa-solid fa-file-csv text-green-600 mr-2"></i>นำเข้าข้อมูลจาก CSV</span>
+                            <p class="text-xs text-gray-500 mt-1">รูปแบบ: รหัสนักเรียน,ชื่อ-นามสกุล,ห้อง,เงินเริ่มต้น</p>
+                        </div>
+                        <input type="file" id="csv-file" accept=".csv" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 cursor-pointer" onchange="importCSV(event)">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัส</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อ-นามสกุล</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ห้อง</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ยอดเงิน (฿)</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="5" class="text-center py-8"><div class="loader mx-auto"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Admin Tab: Projects -->
+            <div id="admin-tab-projects" class="hidden">
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border-t-4 border-secondary">
+                    <h3 class="font-bold text-lg mb-4 text-secondary"><i class="fa-solid fa-lightbulb mr-2"></i>สร้างกลุ่มโปรเจค (Pitching)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">ชื่อโปรเจค / กลุ่ม</label>
+                            <input type="text" id="add-proj-name" class="w-full p-2 border rounded focus:border-secondary focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">ห้องที่รับผิดชอบ</label>
+                            <select id="add-proj-room" class="w-full p-2 border rounded focus:border-secondary focus:outline-none">
+                                <option value="">-- เลือกห้อง --</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">รายละเอียดแบบย่อ</label>
+                            <textarea id="add-proj-desc" rows="2" class="w-full p-2 border rounded focus:border-secondary focus:outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">ราคาขายต่อ 1 ชิ้น/หุ้น (บาท)</label>
+                            <input type="number" id="add-proj-price" min="1" class="w-full p-2 border rounded focus:border-secondary focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button onclick="addProject()" class="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition shadow"><i class="fa-solid fa-check mr-1"></i> บันทึกโปรเจค</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="admin-project-list"></div>
+            </div>
+
+            <!-- Admin Tab: Leaderboard -->
+            <div id="admin-tab-leaderboard" class="hidden">
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-yellow-400">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-trophy text-yellow-400 mr-2"></i>สรุปยอดระดมทุนทั้งหมด</h3>
+                        <select id="leaderboard-filter" onchange="renderLeaderboard()" class="p-2 border rounded bg-gray-50 focus:outline-none focus:border-primary text-sm">
+                            <option value="ALL">ดูทุกห้องเรียน</option>
+                        </select>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">อันดับ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ชื่อโปรเจค</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ห้อง</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">ขายได้ (ชิ้น)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-primary uppercase tracking-wider">ยอดเงินรวม (บาท)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW 3: STUDENT DASHBOARD ==================== -->
+        <div id="view-student" class="hidden">
+            <div class="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-3xl font-bold mb-2">โปรเจคของห้อง <span id="student-room-display" class="text-primary"></span></h2>
+                <p class="text-gray-500">คุณสามารถเลือกลงทุนในโปรเจคของห้องเรียนคุณเท่านั้น</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="student-project-list"></div>
+        </div>
+    </main>
+
+    <!-- ==================== FIREBASE & JAVASCRIPT ==================== -->
+    <script type="module">
+        // 1. นำเข้า Firebase Modules ที่จำเป็น
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 2. Firebase Configuration ของคุณ
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUq1kogvTtr8rezXabqig9CUr8q8lzOJs",
+            authDomain: "swpitching.firebaseapp.com",
+            projectId: "swpitching",
+            storageBucket: "swpitching.firebasestorage.app",
+            messagingSenderId: "313922157867",
+            appId: "1:313922157867:web:b82cfd75b331273226196e"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // การตั้งค่า Path ตามมาตรฐานความปลอดภัย (จัดเก็บข้อมูลใน artifacts/swpitching/public/data/...)
+        const AppID = 'swpitching'; 
+        const studentsColPath = `artifacts/${AppID}/public/data/students`;
+        const projectsColPath = `artifacts/${AppID}/public/data/projects`;
+        
+        // State Management
+        let students = [];
+        let projects = [];
+        let currentUser = null; 
+        const ADMIN_PIN = "999999";
+
+        // DOM Elements
+        const dbStatusDot = document.getElementById('db-status-dot');
+        const dbStatusText = document.getElementById('db-status-text');
+
+        async function initApp() {
+            try {
+                // ยืนยันตัวตนแบบ Anonymous (จำเป็นสำหรับการอ่าน/เขียนข้อมูล)
+                await signInAnonymously(auth);
+                
+                dbStatusDot.classList.replace('bg-yellow-400', 'bg-green-400');
+                dbStatusText.innerText = 'Connected';
+                
+                startRealtimeSync();
+            } catch (error) {
+                console.error("Auth Error:", error);
+                dbStatusDot.classList.replace('bg-yellow-400', 'bg-red-500');
+                dbStatusText.innerText = 'Connection Failed';
+                Swal.fire('การเชื่อมต่อล้มเหลว', 'โปรดตรวจสอบการตั้งค่า Authentication ใน Firebase (ต้องเปิด Anonymous)', 'error');
+            }
+        }
+
+        function startRealtimeSync() {
+            // ดักฟังข้อมูลนักเรียน (ตาราง students)
+            const studentsRef = collection(db, studentsColPath);
+            onSnapshot(studentsRef, (snapshot) => {
+                students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                refreshUI();
+            }, (error) => console.error("Snapshot Error:", error));
+
+            // ดักฟังข้อมูลโปรเจค (ตาราง projects)
+            const projectsRef = collection(db, projectsColPath);
+            onSnapshot(projectsRef, (snapshot) => {
+                projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                refreshUI();
+            }, (error) => console.error("Snapshot Error:", error));
+        }
+
+        // อัปเดตหน้าจอเมื่อข้อมูลเปลี่ยนแปลง (Real-time update)
+        function refreshUI() {
+            // อัปเดตเงินนักเรียน
+            if(currentUser && currentUser.role === 'student') {
+                const updatedStu = students.find(s => s.id === currentUser.data.id);
+                if(updatedStu) {
+                    currentUser.data = updatedStu; 
+                    updateNavBalance();
+                }
+            }
+
+            // รีเฟรชหน้า UI
+            if (!document.getElementById('view-admin').classList.contains('hidden')) {
+                renderAdminStudents();
+                renderAdminProjects();
+                renderLeaderboard();
+                updateRoomSelects();
+            }
+            if (!document.getElementById('view-student').classList.contains('hidden')) {
+                renderStudentProjects();
+            }
+        }
+
+        // --- AUTH LOGIC ---
+        function switchLoginTab(type) {
+            document.getElementById('form-student').classList.toggle('hidden', type !== 'student');
+            document.getElementById('form-admin').classList.toggle('hidden', type !== 'admin');
+            document.getElementById('tab-student').className = type === 'student' ? "flex-1 py-2 font-medium text-primary border-b-2 border-primary transition" : "flex-1 py-2 font-medium text-gray-400 border-b-2 border-transparent transition hover:text-gray-600";
+            document.getElementById('tab-admin').className = type === 'admin' ? "flex-1 py-2 font-medium text-primary border-b-2 border-primary transition" : "flex-1 py-2 font-medium text-gray-400 border-b-2 border-transparent transition hover:text-gray-600";
+        }
+
+        function showView(viewId) {
+            ['view-login', 'view-admin', 'view-student'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function loginStudent() {
+            const id = document.getElementById('login-student-id').value.trim();
+            const student = students.find(s => s.id === id);
+            
+            if(student) {
+                currentUser = { role: 'student', data: student };
+                document.getElementById('nav-user-info').classList.remove('hidden');
+                document.getElementById('nav-balance-container').classList.remove('hidden');
+                document.getElementById('current-user-name').innerHTML = `<i class="fa-solid fa-user-graduate mr-2"></i>คุณ ${student.name} (${student.room})`;
+                
+                updateNavBalance();
+                document.getElementById('student-room-display').innerText = student.room;
+                
+                showView('view-student');
+                renderStudentProjects();
+                Swal.fire({ icon: 'success', title: 'เข้าสู่ระบบสำเร็จ', timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูล', text: 'รหัสนักเรียนนี้ไม่มีในระบบ' });
+            }
+        }
+
+        function loginAdmin() {
+            const pin = document.getElementById('login-admin-pin').value;
+            if(pin === ADMIN_PIN) {
+                currentUser = { role: 'admin' };
+                document.getElementById('nav-user-info').classList.remove('hidden');
+                document.getElementById('nav-balance-container').classList.add('hidden');
+                document.getElementById('current-user-name').innerHTML = `<i class="fa-solid fa-user-shield text-yellow-300 mr-2"></i>ผู้ดูแลระบบ`;
+                
+                showView('view-admin');
+                switchAdminTab('students');
+                Swal.fire({ icon: 'success', title: 'เข้าสู่โหมดจัดการระบบ', timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire({ icon: 'error', title: 'PIN ไม่ถูกต้อง' });
+            }
+            document.getElementById('login-admin-pin').value = '';
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'ต้องการออกจากระบบ?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1E3A8A',
+                confirmButtonText: 'ใช่, ออกจากระบบ',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    currentUser = null;
+                    document.getElementById('nav-user-info').classList.add('hidden');
+                    document.getElementById('login-student-id').value = '';
+                    showView('view-login');
+                }
+            });
+        }
+
+        function updateNavBalance() {
+            if(currentUser && currentUser.role === 'student') {
+                document.getElementById('nav-balance').innerText = currentUser.data.balance.toLocaleString();
+            }
+        }
+
+        // --- ADMIN TABS ---
+        function switchAdminTab(tab) {
+            const tabs = ['students', 'projects', 'leaderboard'];
+            tabs.forEach(t => {
+                document.getElementById(`admin-tab-${t}`).classList.add('hidden');
+                document.getElementById(`btn-tab-${t}`).className = "px-4 py-2 bg-white text-gray-600 border rounded-lg hover:bg-gray-50 transition text-sm";
+            });
+            
+            document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+            
+            if(tab === 'students') {
+                document.getElementById('btn-tab-students').className = "px-4 py-2 bg-primary text-white rounded-lg shadow transition text-sm";
+                renderAdminStudents();
+            } else if(tab === 'projects') {
+                document.getElementById('btn-tab-projects').className = "px-4 py-2 bg-secondary text-white rounded-lg shadow transition text-sm";
+                updateRoomSelects();
+                renderAdminProjects();
+            } else if(tab === 'leaderboard') {
+                document.getElementById('btn-tab-leaderboard').className = "px-4 py-2 bg-yellow-500 text-white rounded-lg shadow transition text-sm";
+                updateRoomSelects();
+                renderLeaderboard();
+            }
+        }
+
+        // --- ADMIN: STUDENTS (Firebase CRUD) ---
+        function renderAdminStudents() {
+            const tbody = document.getElementById('student-table-body');
+            tbody.innerHTML = '';
+            
+            if(students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-400">ยังไม่มีข้อมูลนักเรียน</td></tr>';
+                return;
+            }
+
+            students.forEach(stu => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${stu.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${stu.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">${stu.room}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">฿${(stu.balance||0).toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <button onclick="editStudent('${stu.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteStudent('${stu.id}')" class="text-red-600 hover:text-red-900"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        async function addStudent() {
+            if(!auth.currentUser) return; // Guard clause
+            
+            const id = document.getElementById('add-stu-id').value.trim();
+            const name = document.getElementById('add-stu-name').value.trim();
+            const room = document.getElementById('add-stu-room').value.trim();
+            const balance = parseInt(document.getElementById('add-stu-balance').value) || 0;
+
+            if(!id || !name || !room) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบ', 'warning');
+            if(students.find(s => s.id === id)) return Swal.fire('ผิดพลาด', 'รหัสนี้มีแล้ว', 'error');
+
+            try {
+                await setDoc(doc(db, studentsColPath, id), { name, room, balance });
+                ['id', 'name', 'room'].forEach(i => document.getElementById(`add-stu-${i}`).value = '');
+                Swal.fire({icon: 'success', title: 'เพิ่มสำเร็จ', timer: 1000, showConfirmButton: false});
+            } catch(e) {
+                console.error(e);
+                Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+            }
+        }
+
+        async function deleteStudent(id) {
+            if(!auth.currentUser) return;
+            
+            Swal.fire({title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true}).then(async (res) => {
+                if(res.isConfirmed) {
+                    try {
+                        await deleteDoc(doc(db, studentsColPath, id));
+                    } catch(e) {
+                        Swal.fire('Error', 'ลบข้อมูลไม่สำเร็จ', 'error');
+                    }
+                }
+            });
+        }
+
+        async function editStudent(id) {
+            if(!auth.currentUser) return;
+            
+            const stu = students.find(s => s.id === id);
+            Swal.fire({
+                title: 'แก้ไขข้อมูล',
+                html: `
+                    <input id="swal-name" class="swal2-input" placeholder="ชื่อ" value="${stu.name}">
+                    <input id="swal-room" class="swal2-input" placeholder="ห้อง" value="${stu.room}">
+                    <input id="swal-bal" class="swal2-input" type="number" placeholder="ยอดเงิน" value="${stu.balance}">
+                `,
+                preConfirm: () => ({
+                    name: document.getElementById('swal-name').value,
+                    room: document.getElementById('swal-room').value,
+                    balance: parseInt(document.getElementById('swal-bal').value) || 0
+                })
+            }).then(async (res) => {
+                if(res.isConfirmed) {
+                    try {
+                        await updateDoc(doc(db, studentsColPath, id), {
+                            name: res.value.name,
+                            room: res.value.room,
+                            balance: res.value.balance
+                        });
+                        Swal.fire('สำเร็จ', 'บันทึกเรียบร้อย', 'success');
+                    } catch(e) {
+                        Swal.fire('Error', 'อัปเดตไม่สำเร็จ', 'error');
+                    }
+                }
+            });
+        }
+
+        async function importCSV(event) {
+            if(!auth.currentUser) return;
+            
+            const file = event.target.files[0];
+            if (!file) return;
+            Swal.fire({ title: 'กำลังนำเข้า...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const lines = e.target.result.split('\n');
+                let count = 0;
+                const promises = [];
+
+                for(let i=1; i<lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    if(cols.length >= 3 && cols[0].trim()) {
+                        const id = cols[0].trim(), name = cols[1].trim(), room = cols[2].trim();
+                        const bal = cols[3] ? parseInt(cols[3]) : 0;
+                        if(!students.find(s => s.id === id)) {
+                            promises.push(setDoc(doc(db, studentsColPath, id), { name, room, balance: bal }));
+                            count++;
+                        }
+                    }
+                }
+                
+                try {
+                    await Promise.all(promises);
+                    event.target.value = '';
+                    Swal.fire('นำเข้าสำเร็จ', `เพิ่ม ${count} รายการลงในฐานข้อมูลแล้ว`, 'success');
+                } catch(err) {
+                    console.error(err);
+                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการนำเข้า', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- ADMIN: PROJECTS (Firebase CRUD) ---
+        function getUniqueRooms() { return [...new Set(students.map(s => s.room))].sort(); }
+        
+        function updateRoomSelects() {
+            const rooms = getUniqueRooms();
+            let options = '<option value="">-- เลือกห้อง --</option>';
+            let filterOptions = '<option value="ALL">ดูทุกห้องเรียน</option>';
+            rooms.forEach(r => { options += `<option value="${r}">${r}</option>`; filterOptions += `<option value="${r}">${r}</option>`; });
+            if(document.getElementById('add-proj-room')) document.getElementById('add-proj-room').innerHTML = options;
+            if(document.getElementById('leaderboard-filter')) document.getElementById('leaderboard-filter').innerHTML = filterOptions;
+        }
+
+        function renderAdminProjects() {
+            const list = document.getElementById('admin-project-list');
+            list.innerHTML = '';
+            
+            if(projects.length === 0) {
+                list.innerHTML = `<div class="col-span-full text-center py-6 text-gray-400">ยังไม่มีโปรเจคในฐานข้อมูล</div>`;
+            }
+
+            projects.forEach(p => {
+                const totalMoney = p.fundedUnits * p.pricePerUnit;
+                list.innerHTML += `
+                    <div class="bg-white border rounded-xl p-5 shadow-sm relative">
+                        <button onclick="deleteProject('${p.id}')" class="absolute top-3 right-3 text-red-400 hover:bg-red-50 p-1.5"><i class="fa-solid fa-trash"></i></button>
+                        <span class="bg-pink-100 text-secondary text-xs px-2 py-1 rounded-full font-bold mb-2 inline-block">${p.room}</span>
+                        <h4 class="font-bold text-lg mb-1">${p.name}</h4>
+                        <p class="text-sm text-gray-500 mb-4 h-10 line-clamp-2">${p.desc}</p>
+                        <div class="bg-gray-50 p-3 rounded text-sm mb-2 border">
+                            <div class="flex justify-between mb-1"><span class="text-gray-600">ราคา/ชิ้น</span><span class="font-bold text-primary">฿${p.pricePerUnit}</span></div>
+                            <div class="flex justify-between mb-1"><span class="text-gray-600">ขายได้แล้ว</span><span class="font-bold">${p.fundedUnits} ชิ้น</span></div>
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="text-gray-600">ยอดเงินระดมทุน</span><span class="font-bold text-green-600">฿${totalMoney.toLocaleString()}</span></div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function addProject() {
+            if(!auth.currentUser) return;
+            
+            const name = document.getElementById('add-proj-name').value.trim();
+            const room = document.getElementById('add-proj-room').value;
+            const desc = document.getElementById('add-proj-desc').value.trim();
+            const price = parseInt(document.getElementById('add-proj-price').value);
+
+            if(!name || !room || !desc || !price) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกให้ครบถ้วน', 'warning');
+            
+            const projId = Date.now().toString(); // ใช้เวลาเป็น ID ไม่ซ้ำ
+            
+            try {
+                await setDoc(doc(db, projectsColPath, projId), {
+                    name, room, desc, pricePerUnit: price, fundedUnits: 0
+                });
+
+                ['name', 'desc', 'price'].forEach(id => document.getElementById(`add-proj-${id}`).value = '');
+                Swal.fire({icon:'success', title:'สร้างสำเร็จ', timer:1500, showConfirmButton:false});
+            } catch(e) {
+                console.error(e);
+                Swal.fire('Error', 'ไม่สามารถบันทึกโปรเจคได้', 'error');
+            }
+        }
+
+        async function deleteProject(id) {
+            if(!auth.currentUser) return;
+            
+            Swal.fire({title: 'ลบโปรเจค?', icon: 'warning', showCancelButton: true}).then(async (res) => {
+                if(res.isConfirmed) { 
+                    try {
+                        await deleteDoc(doc(db, projectsColPath, id));
+                    } catch (e) {
+                        Swal.fire('Error', 'ไม่สามารถลบได้', 'error');
+                    }
+                }
+            });
+        }
+
+        // --- ADMIN: LEADERBOARD ---
+        function renderLeaderboard() {
+            const filterRoom = document.getElementById('leaderboard-filter').value;
+            let displayData = projects.map(p => ({
+                ...p, totalMoney: p.fundedUnits * p.pricePerUnit
+            }));
+            
+            if(filterRoom !== 'ALL') {
+                displayData = displayData.filter(p => p.room === filterRoom);
+            }
+            
+            displayData.sort((a, b) => b.totalMoney - a.totalMoney); 
+
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+            
+            if(displayData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-500">ไม่มีข้อมูล</td></tr>`;
+                return;
+            }
+
+            displayData.forEach((p, index) => {
+                let rankIcon = index + 1;
+                if(index === 0) rankIcon = `<i class="fa-solid fa-crown text-yellow-500 text-lg"></i>`;
+                else if(index === 1) rankIcon = `<i class="fa-solid fa-medal text-gray-400 text-lg"></i>`;
+                else if(index === 2) rankIcon = `<i class="fa-solid fa-medal text-amber-600 text-lg"></i>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-gray-600">${rankIcon}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900">${p.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 py-1 rounded bg-gray-200 text-xs">${p.room}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">${p.fundedUnits}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-green-600 text-base">฿${p.totalMoney.toLocaleString()}</td>
+                    </tr>`;
+            });
+        }
+
+        // --- 5. STUDENT DASHBOARD (Firebase Sync) ---
+        function renderStudentProjects() {
+            const list = document.getElementById('student-project-list');
+            list.innerHTML = '';
+            
+            const studentRoom = currentUser.data.room;
+            const displayProjects = projects.filter(p => p.room === studentRoom);
+
+            if(displayProjects.length === 0) {
+                list.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400">ยังไม่มีโปรเจคในห้องของคุณ</div>`;
+                return;
+            }
+
+            displayProjects.forEach(p => {
+                list.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-100 flex flex-col overflow-hidden">
+                        <div class="h-24 gradient-bg relative flex items-center justify-center text-white px-4 text-center">
+                            <h3 class="font-bold text-lg line-clamp-2">${p.name}</h3>
+                        </div>
+                        <div class="p-6 flex-grow flex flex-col">
+                            <p class="text-sm text-gray-600 mb-6 flex-grow">${p.desc}</p>
+                            
+                            <div class="bg-blue-50 p-4 rounded-xl text-center mb-6">
+                                <span class="block text-sm text-blue-600 mb-1">ราคาต่อ 1 ชิ้น</span>
+                                <span class="font-bold text-primary text-2xl">฿${p.pricePerUnit}</span>
+                            </div>
+
+                            <button onclick="investProject('${p.id}')" class="w-full py-3 rounded-xl font-bold text-white gradient-bg hover:opacity-90 shadow-md transition">
+                                <i class="fa-solid fa-hand-holding-dollar mr-2"></i>ร่วมลงทุน (Pitch)
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function investProject(projectId) {
+            if(!auth.currentUser) return;
+            
+            const proj = projects.find(p => p.id === projectId);
+            const myBalance = currentUser.data.balance;
+
+            Swal.fire({
+                title: `ลงทุนในโปรเจค`,
+                html: `
+                    <h3 class="font-bold text-lg text-primary mb-2">${proj.name}</h3>
+                    <p class="text-sm text-gray-600 mb-4">ราคาชิ้นละ <b>${proj.pricePerUnit} บาท</b></p>
+                    <label class="text-sm font-bold block mb-2">ระบุจำนวนชิ้น:</label>
+                    <input type="number" id="invest-amount" class="swal2-input !mt-0 !w-32 text-center" min="1" value="1">
+                    <p class="text-sm font-bold text-red-500 mt-3" id="invest-total">รวมต้องจ่าย: ${proj.pricePerUnit} บาท</p>
+                    <p class="text-xs text-gray-500 mt-1">ยอดเงินของคุณ: ${myBalance} บาท</p>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                didOpen: () => {
+                    const input = Swal.getPopup().querySelector('#invest-amount');
+                    const totalText = Swal.getPopup().querySelector('#invest-total');
+                    input.addEventListener('input', () => {
+                        const val = parseInt(input.value) || 0;
+                        totalText.innerHTML = `รวมต้องจ่าย: ${val * proj.pricePerUnit} บาท`;
+                    });
+                },
+                preConfirm: () => {
+                    const amount = parseInt(Swal.getPopup().querySelector('#invest-amount').value);
+                    if (!amount || amount <= 0) return Swal.showValidationMessage(`กรุณาระบุจำนวนขั้นต่ำ 1 ชิ้น`);
+                    const totalCost = amount * proj.pricePerUnit;
+                    if (totalCost > myBalance) return Swal.showValidationMessage(`เงินไม่พอ (ขาดอีก ${totalCost - myBalance} บาท)`);
+                    return { amount, totalCost };
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const { amount, totalCost } = result.value;
+                    
+                    try {
+                        Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        
+                        // 1. อัปเดตเงินนักเรียน
+                        await updateDoc(doc(db, studentsColPath, currentUser.data.id), {
+                            balance: myBalance - totalCost
+                        });
+                        
+                        // 2. อัปเดตยอดขายโปรเจค
+                        await updateDoc(doc(db, projectsColPath, proj.id), {
+                            fundedUnits: proj.fundedUnits + amount
+                        });
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ!',
+                            text: `คุณได้สนับสนุนไป ${amount} ชิ้น (หักเงิน ${totalCost} บาท)`,
+                            confirmButtonColor: '#DB2777'
+                        });
+
+                    } catch(e) {
+                        console.error(e);
+                        Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลการลงทุนได้', 'error');
+                    }
+                }
+            });
+        }
+
+        // Expose functions to global window for inline onclick attributes
+        window.switchLoginTab = switchLoginTab;
+        window.loginStudent = loginStudent;
+        window.loginAdmin = loginAdmin;
+        window.logout = logout;
+        window.switchAdminTab = switchAdminTab;
+        window.addStudent = addStudent;
+        window.deleteStudent = deleteStudent;
+        window.editStudent = editStudent;
+        window.importCSV = importCSV;
+        window.addProject = addProject;
+        window.deleteProject = deleteProject;
+        window.renderLeaderboard = renderLeaderboard;
+        window.investProject = investProject;
+
+        // เริ่มต้นแอปพลิเคชัน
+        initApp();
+    </script>
+</body>
+</html>
