@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -17,10 +18,7 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Kanit', 'sans-serif'] },
-                    colors: {
-                        primary: '#1E3A8A', 
-                        secondary: '#DB2777', 
-                    }
+                    colors: { primary: '#1E3A8A', secondary: '#DB2777' }
                 }
             }
         }
@@ -31,27 +29,23 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .gradient-text {
-            background: linear-gradient(to right, #1E3A8A, #DB2777);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .gradient-text { background: linear-gradient(to right, #1E3A8A, #DB2777); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-bg { background: linear-gradient(135deg, #1E3A8A, #DB2777); }
         
-        /* Loading Overlay */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9); z-index: 9999;
-            display: flex; flex-direction: column; justify-content: center; items-center;
+            background: rgba(255,255,255,0.95); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: opacity 0.5s;
         }
     </style>
 </head>
 <body class="font-sans text-gray-800 antialiased min-h-screen flex flex-col">
 
-    <div id="loading-overlay" class="flex items-center justify-center">
-        <i class="fa-solid fa-circle-notch fa-spin text-5xl text-primary mb-4"></i>
-        <h2 class="text-xl font-bold text-gray-700">กำลังเชื่อมต่อฐานข้อมูล...</h2>
+    <div id="loading-overlay">
+        <i class="fa-solid fa-circle-notch fa-spin text-6xl text-primary mb-4"></i>
+        <h2 class="text-2xl font-bold text-gray-700">กำลังเชื่อมต่อระบบ...</h2>
+        <p id="loading-text" class="text-gray-500 mt-2">โปรดรอสักครู่</p>
     </div>
 
     <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
@@ -63,7 +57,7 @@
                 </div>
                 <div id="nav-user-info" class="hidden flex items-center gap-4">
                     <div id="nav-balance-container" class="hidden bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
-                        <i class="fa-solid fa-wallet mr-1"></i> ยอดคงเหลือ: <span id="nav-balance" class="font-bold text-yellow-300"></span> บาท
+                        <i class="fa-solid fa-wallet mr-1"></i> <span id="nav-balance" class="font-bold text-yellow-300"></span> บาท
                     </div>
                     <span id="current-user-name" class="font-medium text-sm md:text-base hidden md:block"></span>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition text-sm">
@@ -76,12 +70,12 @@
 
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 py-8">
         
-        <!-- ==================== VIEW 1: LOGIN ==================== -->
+        <!-- VIEW 1: LOGIN -->
         <div id="view-login" class="flex flex-col items-center justify-center min-h-[70vh]">
             <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-4 border-primary">
                 <div class="text-center mb-8">
                     <h2 class="text-3xl font-bold gradient-text mb-2">เข้าสู่ระบบ</h2>
-                    <p class="text-gray-500 text-sm">ระดมทุนสร้างโปรเจค (Pitching)</p>
+                    <p class="text-gray-500 text-sm">ระบบระดมทุนสร้างโปรเจค</p>
                 </div>
 
                 <div class="flex border-b mb-6">
@@ -94,37 +88,30 @@
                         <label class="block text-gray-700 text-sm font-bold mb-2">เลขประจำตัวนักเรียน</label>
                         <div class="relative">
                             <i class="fa-solid fa-id-card absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" id="login-student-id" placeholder="กรอกเลขประจำตัวนักเรียน" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" onkeypress="if(event.key === 'Enter') loginStudent()">
+                            <input type="text" id="login-student-id" placeholder="กรอกรหัสของท่าน" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" onkeypress="if(event.key === 'Enter') loginStudent()">
                         </div>
                     </div>
-                    <button onclick="loginStudent()" class="w-full gradient-bg text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition shadow-md">
-                        เข้าสู่ระบบนักลงทุน
-                    </button>
+                    <button onclick="loginStudent()" class="w-full gradient-bg text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition shadow-md">เข้าสู่ระบบนักลงทุน</button>
                 </div>
 
                 <div id="form-admin" class="hidden">
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">รหัส PIN ผู้ดูแลระบบ</label>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">PIN ผู้ดูแลระบบ</label>
                         <div class="relative">
                             <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
-                            <input type="password" id="login-admin-pin" placeholder="กรอก PIN 6 หลัก" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition" onkeypress="if(event.key === 'Enter') loginAdmin()">
+                            <input type="password" id="login-admin-pin" placeholder="กรอก PIN 6 หลัก" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" onkeypress="if(event.key === 'Enter') loginAdmin()">
                         </div>
                     </div>
-                    <button onclick="loginAdmin()" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition shadow-md">
-                        จัดการระบบ
-                    </button>
+                    <button onclick="loginAdmin()" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition shadow-md">เข้าสู่ระบบจัดการ</button>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== VIEW 2: ADMIN DASHBOARD ==================== -->
+        <!-- VIEW 2: ADMIN DASHBOARD -->
         <div id="view-admin" class="hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b pb-4 gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-user-shield text-secondary mr-2"></i>ระบบจัดการ (Admin)</h2>
-                </div>
+                <h2 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-user-shield text-secondary mr-2"></i>จัดการระบบ (Admin)</h2>
                 
-                <!-- Toggle Funding Switch -->
                 <div class="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                     <span class="text-sm font-bold mr-3 text-gray-700">สถานะระดมทุน:</span>
                     <button id="btn-toggle-funding" onclick="toggleFundingStatus()" class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 focus:outline-none bg-gray-300">
@@ -135,15 +122,14 @@
             </div>
             
             <div class="flex flex-wrap gap-2 mb-6">
-                <button onclick="switchAdminTab('students')" id="btn-tab-students" class="px-4 py-2 bg-primary text-white rounded-lg shadow transition text-sm"><i class="fa-solid fa-users mr-1"></i> จัดการนักเรียน</button>
-                <button onclick="switchAdminTab('projects')" id="btn-tab-projects" class="px-4 py-2 bg-white text-gray-600 border rounded-lg hover:bg-gray-50 transition text-sm"><i class="fa-solid fa-lightbulb mr-1"></i> จัดการโปรเจค</button>
+                <button onclick="switchAdminTab('students')" id="btn-tab-students" class="px-4 py-2 bg-primary text-white rounded-lg shadow transition text-sm">จัดการนักเรียน</button>
+                <button onclick="switchAdminTab('projects')" id="btn-tab-projects" class="px-4 py-2 bg-white text-gray-600 border rounded-lg hover:bg-gray-50 transition text-sm">จัดการโปรเจค</button>
                 <button onclick="switchAdminTab('leaderboard')" id="btn-tab-leaderboard" class="px-4 py-2 bg-white text-gray-600 border rounded-lg hover:bg-gray-50 transition text-sm"><i class="fa-solid fa-chart-simple text-secondary mr-1"></i> สรุประดมทุน</button>
             </div>
 
-            <!-- Admin Tab: Students -->
             <div id="admin-tab-students">
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border-t-4 border-primary">
-                    <h3 class="font-bold text-lg mb-4 text-primary"><i class="fa-solid fa-user-plus mr-2"></i>เพิ่มข้อมูลนักเรียน & ยอดเงิน</h3>
+                    <h3 class="font-bold text-lg mb-4 text-primary"><i class="fa-solid fa-user-plus mr-2"></i>เพิ่มข้อมูลนักเรียน</h3>
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                         <div><label class="block text-xs text-gray-500 mb-1">เลขประจำตัว</label><input type="text" id="add-stu-id" class="w-full p-2 border rounded focus:border-primary focus:outline-none"></div>
                         <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">ชื่อ - นามสกุล</label><input type="text" id="add-stu-name" class="w-full p-2 border rounded focus:border-primary focus:outline-none"></div>
@@ -151,14 +137,15 @@
                         <div><label class="block text-xs text-gray-500 mb-1">เงินเริ่มต้น (บาท)</label><input type="number" id="add-stu-balance" class="w-full p-2 border rounded focus:border-primary focus:outline-none" value="1000"></div>
                     </div>
                     <div class="mt-4 text-right">
-                        <button onclick="addStudent()" class="bg-primary text-white px-6 py-2 rounded hover:bg-blue-800 transition shadow"><i class="fa-solid fa-plus mr-1"></i> เพิ่มนักเรียน</button>
+                        <button onclick="addStudent()" class="bg-primary text-white px-6 py-2 rounded hover:bg-blue-800 transition"><i class="fa-solid fa-plus mr-1"></i> เพิ่ม</button>
                     </div>
+                    
                     <div class="mt-6 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-between">
                         <div>
-                            <span class="text-sm font-medium text-gray-700"><i class="fa-solid fa-file-csv text-green-600 mr-2"></i>นำเข้าข้อมูลจาก CSV</span>
+                            <span class="text-sm font-medium text-gray-700"><i class="fa-solid fa-file-csv text-green-600 mr-2"></i>อัปโหลดไฟล์ CSV</span>
                             <p class="text-xs text-gray-500 mt-1">รูปแบบ: รหัสนักเรียน,ชื่อ-นามสกุล,ห้อง,เงินเริ่มต้น</p>
                         </div>
-                        <input type="file" id="csv-file" accept=".csv" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 cursor-pointer" onchange="importCSV(event)">
+                        <input type="file" accept=".csv" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 cursor-pointer" onchange="importCSV(event)">
                     </div>
                 </div>
 
@@ -187,40 +174,35 @@
                         </table>
                     </div>
                     
-                    <!-- Pagination Controls -->
                     <div class="px-6 py-3 bg-gray-50 border-t flex items-center justify-between">
-                        <span class="text-sm text-gray-500" id="student-pagination-info">แสดงข้อมูล 0 - 0 จากทั้งหมด 0</span>
+                        <span class="text-sm text-gray-500" id="student-pagination-info">แสดง 0-0 จาก 0</span>
                         <div class="flex gap-2">
-                            <button onclick="changePage(-1)" id="btn-prev-page" class="px-3 py-1 bg-white border rounded text-sm disabled:opacity-50 hover:bg-gray-100"><i class="fa-solid fa-chevron-left"></i></button>
-                            <button onclick="changePage(1)" id="btn-next-page" class="px-3 py-1 bg-white border rounded text-sm disabled:opacity-50 hover:bg-gray-100"><i class="fa-solid fa-chevron-right"></i></button>
+                            <button onclick="changePage(-1)" id="btn-prev-page" class="px-3 py-1 bg-white border rounded hover:bg-gray-100 disabled:opacity-50"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button onclick="changePage(1)" id="btn-next-page" class="px-3 py-1 bg-white border rounded hover:bg-gray-100 disabled:opacity-50"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Admin Tab: Projects -->
             <div id="admin-tab-projects" class="hidden">
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border-t-4 border-secondary">
-                    <h3 class="font-bold text-lg mb-4 text-secondary"><i class="fa-solid fa-lightbulb mr-2"></i>สร้างกลุ่มโปรเจค (Pitching)</h3>
+                    <h3 class="font-bold text-lg mb-4 text-secondary"><i class="fa-solid fa-lightbulb mr-2"></i>สร้างกลุ่มโปรเจค</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div><label class="block text-xs text-gray-500 mb-1">ชื่อโปรเจค / กลุ่ม</label><input type="text" id="add-proj-name" class="w-full p-2 border rounded focus:border-secondary focus:outline-none"></div>
                         <div><label class="block text-xs text-gray-500 mb-1">ห้องที่รับผิดชอบ</label><select id="add-proj-room" class="w-full p-2 border rounded focus:border-secondary focus:outline-none"><option value="">-- เลือกห้อง --</option></select></div>
                         <div class="md:col-span-2"><label class="block text-xs text-gray-500 mb-1">รายละเอียดแบบย่อ</label><textarea id="add-proj-desc" rows="2" class="w-full p-2 border rounded focus:border-secondary focus:outline-none"></textarea></div>
                         <div><label class="block text-xs text-gray-500 mb-1">ราคาขายต่อ 1 ชิ้น/หุ้น (บาท)</label><input type="number" id="add-proj-price" min="1" class="w-full p-2 border rounded focus:border-secondary focus:outline-none"></div>
                     </div>
-                    <div class="text-right">
-                        <button onclick="addProject()" class="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition shadow"><i class="fa-solid fa-check mr-1"></i> บันทึกโปรเจค</button>
-                    </div>
+                    <div class="text-right"><button onclick="addProject()" class="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition"><i class="fa-solid fa-check mr-1"></i> บันทึกโปรเจค</button></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="admin-project-list"></div>
             </div>
 
-            <!-- Admin Tab: Leaderboard -->
             <div id="admin-tab-leaderboard" class="hidden">
                 <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-yellow-400">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-trophy text-yellow-400 mr-2"></i>สรุปยอดระดมทุนทั้งหมด</h3>
-                        <select id="leaderboard-filter" onchange="renderLeaderboard()" class="p-2 border rounded bg-gray-50 focus:outline-none focus:border-primary text-sm">
+                        <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-trophy text-yellow-400 mr-2"></i>สรุปยอดระดมทุน</h3>
+                        <select id="leaderboard-filter" onchange="renderLeaderboard()" class="p-2 border rounded bg-gray-50 text-sm focus:outline-none">
                             <option value="ALL">ดูทุกห้องเรียน</option>
                         </select>
                     </div>
@@ -232,7 +214,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">ชื่อโปรเจค</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">ห้อง</th>
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">ขายได้ (ชิ้น)</th>
-                                    <th class="px-6 py-3 text-right text-xs font-bold text-primary uppercase">ยอดเงินรวม (บาท)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-primary uppercase">ยอดเงินรวม</th>
                                 </tr>
                             </thead>
                             <tbody id="leaderboard-body" class="bg-white divide-y divide-gray-200"></tbody>
@@ -242,14 +224,13 @@
             </div>
         </div>
 
-        <!-- ==================== VIEW 3: STUDENT DASHBOARD ==================== -->
+        <!-- VIEW 3: STUDENT DASHBOARD -->
         <div id="view-student" class="hidden">
             <div class="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h2 class="text-3xl font-bold mb-2">โปรเจคของห้อง <span id="student-room-display" class="text-primary"></span></h2>
                 <p class="text-gray-500">คุณสามารถเลือกลงทุนในโปรเจคของห้องเรียนคุณเท่านั้น</p>
             </div>
             
-            <!-- Alert if funding is closed -->
             <div id="funding-closed-alert" class="hidden mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center shadow-sm">
                 <i class="fa-solid fa-lock mr-2"></i> <strong class="font-bold">ขณะนี้ระบบปิดรับการระดมทุนแล้ว!</strong>
             </div>
@@ -259,11 +240,10 @@
     </main>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAUq1kogvTtr8rezXabqig9CUr8q8lzOJs",
             authDomain: "swpitching.firebaseapp.com",
@@ -276,73 +256,81 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        // Path Constants
+        
+        // บังคับใช้ Path เป็นมาตรฐานเพื่อความเป็นระเบียบใน Database
         const DB_ROOT = "artifacts/swpitching/public/data";
+        
         const ADMIN_PIN = "999999";
-
-        // Global State
+        
         let students = [];
         let projects = [];
         let currentUser = null;
         let isFundingOpen = false;
 
-        // Pagination State
         let currentPage = 1;
         const itemsPerPage = 40;
         let adminStudentFilterRoom = "ALL";
 
-        // ==================== FIREBASE REALTIME LISTENERS ====================
-        signInAnonymously(auth).then(() => {
-            console.log("Firebase Auth Anonymous Success");
-            
-            // Listen to Settings (Funding Status)
-            onSnapshot(doc(db, DB_ROOT, "settings"), (docSnap) => {
-                if (docSnap.exists()) {
-                    isFundingOpen = docSnap.data().isFundingOpen;
-                } else {
-                    isFundingOpen = false; 
-                }
-                updateFundingToggleUI();
-                refreshUI();
-            });
-
-            // Listen to Students Collection
-            onSnapshot(collection(db, `${DB_ROOT}/students`), (snapshot) => {
-                students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // เรียงรหัสนักเรียน
-                students.sort((a,b) => a.id.localeCompare(b.id)); 
-                updateRoomSelects(); 
+        async function startSystem() {
+            try {
+                document.getElementById('loading-text').innerText = "กำลังยืนยันตัวตน...";
+                await signInAnonymously(auth); // ต้องรอ Login อัตโนมัติให้เสร็จก่อน
                 
-                if(currentUser && currentUser.role === 'student') {
-                    const me = students.find(s => s.id === currentUser.data.id);
-                    if(me) {
-                        currentUser.data = me;
-                        updateNavBalance();
+                document.getElementById('loading-text').innerText = "กำลังโหลดข้อมูล...";
+
+                // 1. Listen Settings (เปิด-ปิด ระบบ)
+                onSnapshot(doc(db, DB_ROOT, "settings"), (docSnap) => {
+                    if (docSnap.exists()) isFundingOpen = docSnap.data().isFundingOpen;
+                    else isFundingOpen = false;
+                    updateFundingToggleUI();
+                    if(currentUser) refreshUI();
+                }, (error) => console.error("Settings Error:", error));
+
+                // 2. Listen Students
+                onSnapshot(collection(db, `${DB_ROOT}/students`), (snapshot) => {
+                    students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    students.sort((a,b) => a.id.localeCompare(b.id)); // เรียงรหัส
+                    updateRoomSelects();
+                    
+                    if(currentUser && currentUser.role === 'student') {
+                        const me = students.find(s => s.id === currentUser.data.id);
+                        if(me) {
+                            currentUser.data = me;
+                            updateNavBalance();
+                        }
                     }
-                }
-                refreshUI();
-            });
+                    if(currentUser) refreshUI();
+                }, (error) => console.error("Students Error:", error));
 
-            // Listen to Projects Collection
-            onSnapshot(collection(db, `${DB_ROOT}/projects`), (snapshot) => {
-                projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                refreshUI();
-            });
-            
-            setTimeout(() => {
-                document.getElementById('loading-overlay').style.opacity = '0';
-                setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 500);
-            }, 1000);
+                // 3. Listen Projects
+                onSnapshot(collection(db, `${DB_ROOT}/projects`), (snapshot) => {
+                    projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if(currentUser) refreshUI();
+                }, (error) => console.error("Projects Error:", error));
 
-        }).catch((error) => {
-            Swal.fire("เชื่อมต่อฐานข้อมูลล้มเหลว", error.message, "error");
-        });
+                // ซ่อน Loading Screen เมื่อสำเร็จ
+                setTimeout(() => {
+                    const overlay = document.getElementById('loading-overlay');
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.style.display = 'none', 500);
+                }, 800);
 
+            } catch (error) {
+                console.error("Firebase Init Error:", error);
+                document.getElementById('loading-overlay').innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-4"></i>
+                    <h2 class="text-xl font-bold text-gray-800">เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล</h2>
+                    <p class="text-red-500 mt-2 max-w-md text-center">${error.message}</p>
+                    <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-primary text-white rounded">ลองใหม่</button>
+                `;
+            }
+        }
+        
+        // เริ่มระบบทันที
+        startSystem();
 
-        // ==================== CORE UI REFRESH ====================
         function refreshUI() {
-            // ไม่ซ่อน view ปัจจุบัน แค่อัปเดตข้อมูลข้างใน
+            updateRoomSelects(); 
             if (!document.getElementById('view-admin').classList.contains('hidden')) {
                 renderAdminStudents();
                 renderAdminProjects();
@@ -353,8 +341,6 @@
             }
         }
 
-
-        // ==================== WINDOW BINDINGS (For HTML onclick) ====================
         window.switchLoginTab = (type) => {
             document.getElementById('form-student').classList.toggle('hidden', type !== 'student');
             document.getElementById('form-admin').classList.toggle('hidden', type !== 'admin');
@@ -370,23 +356,17 @@
         window.loginStudent = () => {
             const id = document.getElementById('login-student-id').value.trim();
             const student = students.find(s => s.id === id);
-            
             if(student) {
                 currentUser = { role: 'student', data: student };
                 document.getElementById('nav-user-info').classList.remove('hidden');
                 document.getElementById('nav-balance-container').classList.remove('hidden');
                 document.getElementById('current-user-name').innerHTML = `<i class="fa-solid fa-user-graduate mr-2"></i>คุณ ${student.name} (${student.room})`;
-                
                 updateNavBalance();
                 document.getElementById('student-room-display').innerText = student.room;
-                
                 window.showView('view-student');
                 renderStudentProjects();
-                
                 Swal.fire({ icon: 'success', title: 'เข้าสู่ระบบสำเร็จ', timer: 1500, showConfirmButton: false });
-            } else {
-                Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูล', text: 'รหัสนักเรียนนี้ไม่มีในระบบ' });
-            }
+            } else Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูล', text: 'รหัสนักเรียนนี้ไม่มีในระบบ' });
         };
 
         window.loginAdmin = () => {
@@ -396,24 +376,20 @@
                 document.getElementById('nav-user-info').classList.remove('hidden');
                 document.getElementById('nav-balance-container').classList.add('hidden');
                 document.getElementById('current-user-name').innerHTML = `<i class="fa-solid fa-user-shield text-yellow-300 mr-2"></i>ผู้ดูแลระบบ`;
-                
                 window.showView('view-admin');
                 window.switchAdminTab('students');
-                
                 Swal.fire({ icon: 'success', title: 'เข้าสู่โหมดจัดการระบบ', timer: 1500, showConfirmButton: false });
-            } else {
-                Swal.fire({ icon: 'error', title: 'PIN ไม่ถูกต้อง' });
-            }
+            } else Swal.fire({ icon: 'error', title: 'PIN ไม่ถูกต้อง' });
             document.getElementById('login-admin-pin').value = '';
         };
 
         window.logout = () => {
             if(!currentUser) return;
             Swal.fire({
-                title: 'ต้องการออกจากระบบ?', icon: 'question',
-                showCancelButton: true, confirmButtonColor: '#1E3A8A', confirmButtonText: 'ใช่, ออกจากระบบ',
-            }).then((result) => {
-                if (result.isConfirmed) {
+                title: 'ออกจากระบบ?', icon: 'question', showCancelButton: true,
+                confirmButtonColor: '#1E3A8A', confirmButtonText: 'ใช่, ออกจากระบบ',
+            }).then((res) => {
+                if (res.isConfirmed) {
                     currentUser = null;
                     document.getElementById('nav-user-info').classList.add('hidden');
                     document.getElementById('login-student-id').value = '';
@@ -428,15 +404,12 @@
             }
         }
 
-        // ==================== ADMIN: TABS & ROOMS ====================
         window.switchAdminTab = (tab) => {
-            const tabs = ['students', 'projects', 'leaderboard'];
-            tabs.forEach(t => {
+            ['students', 'projects', 'leaderboard'].forEach(t => {
                 document.getElementById(`admin-tab-${t}`).classList.add('hidden');
                 document.getElementById(`btn-tab-${t}`).className = "px-4 py-2 bg-white text-gray-600 border rounded-lg hover:bg-gray-50 transition text-sm";
             });
             document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
-            
             if(tab === 'students') {
                 document.getElementById('btn-tab-students').className = "px-4 py-2 bg-primary text-white rounded-lg shadow transition text-sm";
                 renderAdminStudents();
@@ -451,8 +424,6 @@
 
         function updateRoomSelects() {
             const rooms = [...new Set(students.map(s => s.room).filter(Boolean))].sort();
-            
-            // Backup current values to prevent reset
             const projSelect = document.getElementById('add-proj-room');
             const leaderSelect = document.getElementById('leaderboard-filter');
             const stuFilterSelect = document.getElementById('filter-admin-student-room');
@@ -474,50 +445,54 @@
             if(stuFilterSelect) { stuFilterSelect.innerHTML = optFilter; stuFilterSelect.value = currStu; }
         }
 
-        // ==================== ADMIN: STUDENTS & PAGINATION ====================
-        window.changeStudentFilter = () => {
-            adminStudentFilterRoom = document.getElementById('filter-admin-student-room').value;
-            currentPage = 1; // Reset to page 1
-            renderAdminStudents();
+        function updateFundingToggleUI() {
+            const btn = document.getElementById('btn-toggle-funding');
+            const knob = document.getElementById('toggle-funding-knob');
+            const txt = document.getElementById('text-funding-status');
+            if(!btn) return;
+            if (isFundingOpen) {
+                btn.classList.replace('bg-gray-300', 'bg-green-500');
+                knob.classList.replace('translate-x-1', 'translate-x-6');
+                txt.innerText = "เปิด"; txt.classList.replace('text-gray-500', 'text-green-600');
+            } else {
+                btn.classList.replace('bg-green-500', 'bg-gray-300');
+                knob.classList.replace('translate-x-6', 'translate-x-1');
+                txt.innerText = "ปิด"; txt.classList.replace('text-green-600', 'text-gray-500');
+            }
+        }
+
+        window.toggleFundingStatus = async () => {
+            const newState = !isFundingOpen;
+            try {
+                await setDoc(doc(db, DB_ROOT, "settings"), { isFundingOpen: newState }, { merge: true });
+                Swal.fire({ icon: 'success', title: newState ? 'เปิดรับระดมทุนแล้ว' : 'ปิดรับระดมทุนแล้ว', timer: 1000, showConfirmButton: false });
+            } catch (e) { Swal.fire('Error', e.message, 'error'); }
         };
 
-        window.changePage = (step) => {
-            currentPage += step;
-            renderAdminStudents();
-        };
+        window.changeStudentFilter = () => { adminStudentFilterRoom = document.getElementById('filter-admin-student-room').value; currentPage = 1; renderAdminStudents(); };
+        window.changePage = (step) => { currentPage += step; renderAdminStudents(); };
 
         function renderAdminStudents() {
             const tbody = document.getElementById('student-table-body');
             if(!tbody) return;
             
-            // 1. Filter
-            let filteredStudents = students;
-            if(adminStudentFilterRoom !== "ALL") {
-                filteredStudents = students.filter(s => s.room === adminStudentFilterRoom);
-            }
-
-            // 2. Pagination Math
+            let filteredStudents = adminStudentFilterRoom === "ALL" ? students : students.filter(s => s.room === adminStudentFilterRoom);
             const totalItems = filteredStudents.length;
             const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            
             if(currentPage < 1) currentPage = 1;
             if(currentPage > totalPages) currentPage = totalPages;
 
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
             
-            // 3. Update UI
-            document.getElementById('student-pagination-info').innerText = `แสดงข้อมูล ${totalItems > 0 ? startIndex + 1 : 0} - ${endIndex} จากทั้งหมด ${totalItems}`;
+            document.getElementById('student-pagination-info').innerText = `แสดง ${totalItems>0 ? startIndex+1 : 0}-${endIndex} จากทั้งหมด ${totalItems}`;
             document.getElementById('btn-prev-page').disabled = currentPage === 1;
             document.getElementById('btn-next-page').disabled = currentPage === totalPages;
 
-            const pageData = filteredStudents.slice(startIndex, endIndex);
-
-            // 4. Render Table
             tbody.innerHTML = '';
-            if(pageData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">ไม่มีข้อมูลนักเรียน</td></tr>`;
-                return;
-            }
+            const pageData = filteredStudents.slice(startIndex, endIndex);
+            if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">ไม่มีข้อมูล</td></tr>`; return; }
 
             pageData.forEach(stu => {
                 tbody.innerHTML += `
@@ -535,6 +510,7 @@
         }
 
         window.addStudent = async () => {
+            if(!auth.currentUser) return;
             const id = document.getElementById('add-stu-id').value.trim();
             const name = document.getElementById('add-stu-name').value.trim();
             const room = document.getElementById('add-stu-room').value.trim();
@@ -545,23 +521,22 @@
 
             try {
                 await setDoc(doc(db, `${DB_ROOT}/students`, id), { name, room, balance });
-                document.getElementById('add-stu-id').value = '';
-                document.getElementById('add-stu-name').value = '';
-                document.getElementById('add-stu-room').value = '';
+                ['add-stu-id','add-stu-name','add-stu-room'].forEach(i => document.getElementById(i).value = '');
                 Swal.fire({icon: 'success', title: 'เพิ่มสำเร็จ', timer: 1000, showConfirmButton: false});
             } catch(e) { Swal.fire('Error', e.message, 'error'); }
         };
 
         window.deleteStudent = (id) => {
+            if(!auth.currentUser) return;
             Swal.fire({title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true}).then(async res => {
                 if(res.isConfirmed) {
-                    try { await deleteDoc(doc(db, `${DB_ROOT}/students`, id)); } 
-                    catch(e) { Swal.fire('Error', e.message, 'error'); }
+                    try { await deleteDoc(doc(db, `${DB_ROOT}/students`, id)); } catch(e) { Swal.fire('Error', e.message, 'error'); }
                 }
             });
         };
 
         window.editStudent = (id) => {
+            if(!auth.currentUser) return;
             const stu = students.find(s => s.id === id);
             Swal.fire({
                 title: 'แก้ไขข้อมูล',
@@ -570,22 +545,17 @@
                     <input id="swal-room" class="swal2-input" placeholder="ห้อง" value="${stu.room}">
                     <input id="swal-bal" type="number" class="swal2-input" placeholder="ยอดเงิน" value="${stu.balance}">
                 `,
-                preConfirm: () => ({
-                    name: document.getElementById('swal-name').value,
-                    room: document.getElementById('swal-room').value,
-                    balance: parseInt(document.getElementById('swal-bal').value) || 0
-                })
+                preConfirm: () => ({ name: document.getElementById('swal-name').value, room: document.getElementById('swal-room').value, balance: parseInt(document.getElementById('swal-bal').value) || 0 })
             }).then(async res => {
                 if(res.isConfirmed) {
-                    try {
-                        await setDoc(doc(db, `${DB_ROOT}/students`, id), res.value, { merge: true });
-                        Swal.fire({icon: 'success', title: 'อัปเดตสำเร็จ', timer: 1000, showConfirmButton: false});
-                    } catch(e) { Swal.fire('Error', e.message, 'error'); }
+                    try { await setDoc(doc(db, `${DB_ROOT}/students`, id), res.value, { merge: true }); Swal.fire({icon: 'success', title: 'อัปเดตสำเร็จ', timer: 1000, showConfirmButton: false}); } 
+                    catch(e) { Swal.fire('Error', e.message, 'error'); }
                 }
             });
         };
 
         window.importCSV = (event) => {
+            if(!auth.currentUser) return;
             const file = event.target.files[0];
             if (!file) return;
             
@@ -600,41 +570,34 @@
                 for(let i=1; i<lines.length; i++) {
                     let line = lines[i].trim();
                     if(!line) continue;
-
-                    // Parse CSV handling quotes and commas
+                    
                     let cols = [];
                     let inQuote = false;
                     let currentVal = '';
                     
                     for(let char of line) {
-                        if (char === '"') { inQuote = !inQuote; }
+                        if (char === '"') inQuote = !inQuote;
                         else if (char === ',' && !inQuote) { cols.push(currentVal.trim()); currentVal = ''; }
-                        else { currentVal += char; }
+                        else currentVal += char;
                     }
-                    cols.push(currentVal.trim()); // Push last col
+                    cols.push(currentVal.trim());
 
                     if(cols.length >= 3 && cols[0]) {
-                        const id = cols[0];
-                        const name = cols[1];
-                        const room = cols[2];
+                        const id = cols[0]; const name = cols[1]; const room = cols[2];
                         let balStr = cols[3] || "0";
                         balStr = balStr.replace(/,/g, ''); 
                         const balance = parseInt(balStr) || 0;
 
-                        try {
-                            await setDoc(doc(db, `${DB_ROOT}/students`, id), { name, room, balance });
-                            count++;
-                        } catch(err) { console.error("CSV Error on id:", id, err); }
+                        try { await setDoc(doc(db, `${DB_ROOT}/students`, id), { name, room, balance }); count++; } 
+                        catch(err) { console.error("CSV Error:", err); }
                     }
                 }
-                
                 event.target.value = '';
                 Swal.fire('สำเร็จ', `เพิ่ม/อัปเดต ${count} รายการ`, 'success');
             };
             reader.readAsText(file);
         };
 
-        // ==================== ADMIN: PROJECTS ====================
         window.renderAdminProjects = () => {
             const list = document.getElementById('admin-project-list');
             if(!list) return;
@@ -657,6 +620,7 @@
         };
 
         window.addProject = async () => {
+            if(!auth.currentUser) return;
             const name = document.getElementById('add-proj-name').value.trim();
             const room = document.getElementById('add-proj-room').value;
             const desc = document.getElementById('add-proj-desc').value.trim();
@@ -667,26 +631,20 @@
             const newId = Date.now().toString();
             try {
                 await setDoc(doc(db, `${DB_ROOT}/projects`, newId), { name, room, desc, pricePerUnit: price, fundedUnits: 0 });
-                ['name', 'desc', 'price'].forEach(id => document.getElementById(`add-proj-${id}`).value = '');
+                ['add-proj-name', 'add-proj-desc', 'add-proj-price'].forEach(id => document.getElementById(id).value = '');
                 Swal.fire({icon:'success', title:'สร้างสำเร็จ', timer:1500, showConfirmButton:false});
             } catch(e) { Swal.fire('Error', e.message, 'error'); }
         };
 
         window.deleteProject = (id) => {
+            if(!auth.currentUser) return;
             Swal.fire({title: 'ลบโปรเจค?', icon: 'warning', showCancelButton: true}).then(async res => {
-                if(res.isConfirmed) {
-                    try { await deleteDoc(doc(db, `${DB_ROOT}/projects`, id)); }
-                    catch(e) { Swal.fire('Error', e.message, 'error'); }
-                }
+                if(res.isConfirmed) { try { await deleteDoc(doc(db, `${DB_ROOT}/projects`, id)); } catch(e) { Swal.fire('Error', e.message, 'error'); } }
             });
         };
 
-        // ==================== ADMIN: LEADERBOARD ====================
         window.renderLeaderboard = () => {
-            const filterEl = document.getElementById('leaderboard-filter');
-            if(!filterEl) return;
-            const filterRoom = filterEl.value;
-            
+            const filterRoom = document.getElementById('leaderboard-filter').value;
             let displayData = projects.map(p => ({ ...p, totalMoney: p.fundedUnits * p.pricePerUnit }));
             if(filterRoom !== 'ALL') displayData = displayData.filter(p => p.room === filterRoom);
             displayData.sort((a, b) => b.totalMoney - a.totalMoney); 
@@ -694,10 +652,7 @@
             const tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '';
             
-            if(displayData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-500">ไม่มีข้อมูล</td></tr>`;
-                return;
-            }
+            if(displayData.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-500">ไม่มีข้อมูล</td></tr>`; return; }
 
             displayData.forEach((p, index) => {
                 let rankIcon = index + 1;
@@ -716,66 +671,29 @@
             });
         };
 
-        // ==================== SYSTEM TOGGLE ====================
-        function updateFundingToggleUI() {
-            const knob = document.getElementById('toggle-funding-knob');
-            const btn = document.getElementById('btn-toggle-funding');
-            const text = document.getElementById('text-funding-status');
-            
-            if(!btn) return;
-
-            if (isFundingOpen) {
-                btn.classList.replace('bg-gray-300', 'bg-green-500');
-                knob.classList.replace('translate-x-1', 'translate-x-6');
-                text.innerText = "เปิด";
-                text.classList.replace('text-gray-500', 'text-green-600');
-            } else {
-                btn.classList.replace('bg-green-500', 'bg-gray-300');
-                knob.classList.replace('translate-x-6', 'translate-x-1');
-                text.innerText = "ปิด";
-                text.classList.replace('text-green-600', 'text-gray-500');
-            }
-        }
-
-        window.toggleFundingStatus = async () => {
-            const newState = !isFundingOpen;
-            try {
-                await setDoc(doc(db, DB_ROOT, "settings"), { isFundingOpen: newState }, { merge: true });
-                // onSnapshot will catch this and call updateFundingToggleUI()
-                const msg = newState ? 'เปิดรับระดมทุนแล้ว' : 'ปิดรับระดมทุนแล้ว';
-                Swal.fire({ icon: 'success', title: msg, timer: 1000, showConfirmButton: false });
-            } catch (e) { Swal.fire('Error', e.message, 'error'); }
-        };
-
-        // ==================== STUDENT DASHBOARD ====================
         window.renderStudentProjects = () => {
             const list = document.getElementById('student-project-list');
             const alertBox = document.getElementById('funding-closed-alert');
             if(!list || !currentUser || currentUser.role !== 'student') return;
             
-            // Handle Funding Status Alert
-            if (isFundingOpen) {
-                alertBox.classList.add('hidden');
-            } else {
-                alertBox.classList.remove('hidden');
-            }
+            if (isFundingOpen) alertBox.classList.add('hidden');
+            else alertBox.classList.remove('hidden');
 
             list.innerHTML = '';
-            const studentRoom = currentUser.data.room;
-            const displayProjects = projects.filter(p => p.room === studentRoom);
+            const displayProjects = projects.filter(p => p.room === currentUser.data.room);
 
             if(displayProjects.length === 0) {
                 list.innerHTML = `<div class="col-span-full text-center py-10 bg-white rounded-xl border border-dashed border-gray-300">
                     <i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-3"></i>
-                    <p class="text-gray-500">ยังไม่มีกลุ่มโปรเจคของห้อง <span class="font-bold text-primary">${studentRoom}</span></p>
+                    <p class="text-gray-500">ยังไม่มีกลุ่มโปรเจคของห้อง <span class="font-bold text-primary">${currentUser.data.room}</span></p>
                 </div>`;
                 return;
             }
 
             displayProjects.forEach(p => {
-                const buttonHtml = isFundingOpen 
+                const btnHtml = isFundingOpen 
                     ? `<button onclick="investProject('${p.id}')" class="w-full py-3 rounded-xl font-bold text-white gradient-bg hover:opacity-90 shadow-md transition"><i class="fa-solid fa-hand-holding-dollar mr-2"></i>ร่วมลงทุน (Pitch)</button>`
-                    : `<button disabled class="w-full py-3 rounded-xl font-bold text-gray-500 bg-gray-200 cursor-not-allowed border"><i class="fa-solid fa-lock mr-2"></i>ขณะนี้ปิดรับการระดมทุน</button>`;
+                    : `<button disabled class="w-full py-3 rounded-xl font-bold text-gray-500 bg-gray-200 border cursor-not-allowed"><i class="fa-solid fa-lock mr-2"></i>ขณะนี้ปิดรับการระดมทุน</button>`;
 
                 list.innerHTML += `
                     <div class="bg-white rounded-2xl shadow-md border border-gray-100 flex flex-col overflow-hidden">
@@ -788,17 +706,15 @@
                                 <span class="block text-sm text-blue-600 mb-1">ราคาต่อ 1 ชิ้น</span>
                                 <span class="font-bold text-primary text-2xl">฿${p.pricePerUnit}</span>
                             </div>
-                            ${buttonHtml}
+                            ${btnHtml}
                         </div>
                     </div>`;
             });
         };
 
         window.investProject = (projectId) => {
-            if(!isFundingOpen) {
-                Swal.fire('ปิดรับระดมทุน', 'ขณะนี้ระบบปิดรับการระดมทุนแล้ว', 'warning');
-                return;
-            }
+            if(!auth.currentUser) return;
+            if(!isFundingOpen) { Swal.fire('ปิดระดมทุน', 'ขณะนี้ระบบปิดรับการลงทุนแล้ว', 'warning'); return; }
             
             const proj = projects.find(p => p.id === projectId);
             const myBalance = currentUser.data.balance || 0;
@@ -832,21 +748,14 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
-                    
                     const { amount, totalCost } = result.value;
-                    const newBalance = myBalance - totalCost;
-                    const newFundedUnits = proj.fundedUnits + amount;
                     
                     try {
-                        // อัปเดตข้อมูล 2 ที่พร้อมกัน
-                        await setDoc(doc(db, `${DB_ROOT}/students`, currentUser.data.id), { balance: newBalance }, { merge: true });
-                        await setDoc(doc(db, `${DB_ROOT}/projects`, proj.id), { fundedUnits: newFundedUnits }, { merge: true });
+                        // อัปเดตเงินนักเรียน และยอดโปรเจค พร้อมกัน
+                        await setDoc(doc(db, `${DB_ROOT}/students`, currentUser.data.id), { balance: myBalance - totalCost }, { merge: true });
+                        await setDoc(doc(db, `${DB_ROOT}/projects`, proj.id), { fundedUnits: proj.fundedUnits + amount }, { merge: true });
                         
-                        Swal.fire({
-                            icon: 'success', title: 'สำเร็จ!',
-                            text: `คุณสนับสนุนไป ${amount} ชิ้น (หักเงิน ${totalCost} บาท)`,
-                            confirmButtonColor: '#DB2777'
-                        });
+                        Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: `คุณสนับสนุนไป ${amount} ชิ้น (หักเงิน ${totalCost} บาท)`, confirmButtonColor: '#DB2777' });
                     } catch(e) { Swal.fire('Error', e.message, 'error'); }
                 }
             });
